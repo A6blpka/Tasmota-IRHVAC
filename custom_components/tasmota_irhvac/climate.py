@@ -111,7 +111,7 @@ from .const import (
     CONF_VENDOR,
     CONF_PROTOCOL,
     CONF_COMMAND_TOPIC,
-    CONF_STATE_TOPIC,
+    CONF_STATE_TOPICS,
     CONF_TEMP_SENSOR,
     CONF_HUMIDITY_SENSOR,
     CONF_POWER_SENSOR,
@@ -142,7 +142,7 @@ from .const import (
     DATA_KEY,
     DOMAIN,
     DEFAULT_NAME,
-    DEFAULT_STATE_TOPIC,
+    DEFAULT_STATE_TOPICS,
     DEFAULT_COMMAND_TOPIC,
     DEFAULT_TARGET_TEMP,
     DEFAULT_MIN_TEMP,
@@ -205,9 +205,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TEMP_SENSOR): cv.entity_id,
         vol.Optional(CONF_HUMIDITY_SENSOR): cv.entity_id,
         vol.Optional(CONF_POWER_SENSOR): cv.entity_id,
-        vol.Optional(
-            CONF_STATE_TOPIC, default=DEFAULT_STATE_TOPIC
-        ): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_STATE_TOPICS, default=DEFAULT_STATE_TOPICS): vol.All(
+            cv.ensure_list, [mqtt.valid_subscribe_topic]
+        ),
         vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TARGET_TEMP, default=DEFAULT_TARGET_TEMP): vol.Coerce(float),
@@ -437,7 +437,7 @@ class TasmotaIrhvac(ClimateEntity, RestoreEntity, MqttAvailability):
         self._temp_sensor = config.get(CONF_TEMP_SENSOR)
         self._humidity_sensor = config.get(CONF_HUMIDITY_SENSOR)
         self._power_sensor = config.get(CONF_POWER_SENSOR)
-        self.state_topic = config[CONF_STATE_TOPIC]
+        self.state_topics = config[CONF_STATE_TOPICS]
         self._hvac_mode = config[CONF_INITIAL_OPERATION_MODE]
         self._away_temp = config.get(CONF_AWAY_TEMP)
         self._saved_target_temp = config[CONF_TARGET_TEMP] or self._away_temp
@@ -698,13 +698,14 @@ class TasmotaIrhvac(ClimateEntity, RestoreEntity, MqttAvailability):
                     state = self.hass.states.get(self._power_sensor)
                     await self._async_power_sensor_changed(self._power_sensor, None, state)
 
-        topics = {
-                    CONF_STATE_TOPIC: {
-                        "topic": self.state_topic,
-                        "msg_callback": state_message_received,
-                        "qos": 1,
-                    }
-                }
+        topics = {}
+
+        for t in self.state_topics:
+            topics[t] = {
+                "topic": t,
+                "msg_callback": state_message_received,
+                "qos": 1,
+            }
 
         if hasattr(mqtt.subscription, 'async_prepare_subscribe_topics'):
             # for HA Core >= 2022.3.0

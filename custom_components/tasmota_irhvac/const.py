@@ -63,7 +63,7 @@ CONF_EXCLUSIVE_GROUP_VENDOR = "exclusive_group_vendor"
 CONF_VENDOR = "vendor"
 CONF_PROTOCOL = "protocol"  # Soon to be deprecated
 CONF_COMMAND_TOPIC = "command_topic"
-CONF_STATE_TOPIC = "state_topic"
+CONF_STATE_TOPICS = "state_topics"
 CONF_TEMP_SENSOR = "temperature_sensor"
 CONF_HUMIDITY_SENSOR = "humidity_sensor"
 CONF_POWER_SENSOR = "power_sensor"
@@ -94,7 +94,7 @@ CONF_TOGGLE_LIST = "toggle_list"
 
 # Platform specific default values
 DEFAULT_NAME = "IR AirConditioner"
-DEFAULT_STATE_TOPIC = "state"
+DEFAULT_STATE_TOPICS = []
 DEFAULT_COMMAND_TOPIC = "topic"
 DEFAULT_TARGET_TEMP = 26
 DEFAULT_MIN_TEMP = 16
